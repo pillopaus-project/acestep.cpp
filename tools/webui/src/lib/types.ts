@@ -78,6 +78,10 @@ export interface Song {
 	// user-marked favorite, persisted across reloads. Acts as a sticky
 	// flag for the bulk "Delete non-favorites" action.
 	favorite?: boolean;
+	// timbre reference flag: when true, the song is hidden from the main list
+	// and appears in the timbre reference dropdown. Used to apply timbre
+	// characteristics to generated songs.
+	timbre_ref?: boolean;
 	// raw f32 [T*64] post-DiT latents that the VAE decoder produces this
 	// audio from. Always present for songs from /synth or /vae decode (the
 	// server emits them unconditionally). Absent only for songs imported

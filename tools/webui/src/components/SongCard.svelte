@@ -38,6 +38,7 @@
 
 	let isRef = $derived(app.refSongId === song.id);
 	let isSrc = $derived(app.srcSongId === song.id);
+	let isTimbreRef = $derived(song.timbre_ref ?? false);
 
 	// "(variant task)" suffix rebuilt from the request, used for the card
 	// title and download filenames. Song.name itself stays the base name.
@@ -48,6 +49,16 @@
 			app.refSongId = null;
 		} else {
 			app.refSongId = song.id ?? null;
+		}
+	}
+
+	async function toggleTimbreRef() {
+		if (song.id == null) return;
+		song.timbre_ref = !song.timbre_ref;
+		await putSong($state.snapshot(song));
+		// Reset the dropdown selection if we're unmarking
+		if (!song.timbre_ref && app.timbreRefId === song.id) {
+			app.timbreRefId = null;
 		}
 	}
 
@@ -346,6 +357,15 @@
 					onchange={toggleRef}
 					title="Timbre reference"
 				/> Timbre ref</label
+			>
+			<label class="icon-btn"
+				><input
+					type="checkbox"
+					class="ref-check"
+					checked={isTimbreRef}
+					onchange={toggleTimbreRef}
+					title="Mark/unmark as timbre palette for dropdown selection"
+				/> Timbre palette</label
 			>
 		</div>
 	</div>

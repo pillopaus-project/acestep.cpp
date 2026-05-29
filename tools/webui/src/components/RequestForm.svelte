@@ -77,7 +77,7 @@
 	let hasCodes = $derived(!!app.request.audio_codes?.trim() && app.srcSongId == null);
 	let hasSrc = $derived(app.srcSongId != null);
 	let hasRange = $derived(app.srcRangeStart != null || app.srcRangeEnd != null);
-	let hasRef = $derived(app.refSongId != null);
+	let hasRef = $derived(app.refSongId != null || app.timbreRefId != null);
 
 	// instrumental mode: checked when lyrics and language match the convention.
 	// any manual edit to either field naturally unchecks via $derived.
@@ -461,8 +461,10 @@
 			}
 
 			// find source audio (cover/lego/repaint) and reference audio (timbre)
+			// prioritize timbreRefId from dropdown if set, otherwise use refSongId from checkbox
 			const srcSong = app.srcSongId != null ? app.songs.find((s) => s.id === app.srcSongId) : null;
-			const refSong = app.refSongId != null ? app.songs.find((s) => s.id === app.refSongId) : null;
+			const refSongId = app.timbreRefId != null ? app.timbreRefId : app.refSongId;
+			const refSong = refSongId != null ? app.songs.find((s) => s.id === refSongId) : null;
 
 			// extract DiT variant from model filename
 			// "acestep-v15-xl-turbo-Q8_0.gguf" -> "xl-turbo"
@@ -550,6 +552,17 @@
 
 	function ph(v: unknown): string {
 		return v != null ? String(v) : '';
+	}
+
+	// Reset the timbre ref by unmarking the selected song
+	async function resetTimbreRef() {
+		if (app.timbreRefId == null) return;
+		const song = app.songs.find((s) => s.id === app.timbreRefId);
+		if (song) {
+			song.timbre_ref = false;
+			await putSong($state.snapshot(song));
+			app.timbreRefId = null;
+		}
 	}
 </script>
 
@@ -897,6 +910,29 @@
 			</div>
 		</div>
 	</details>
+
+	<div class="model-row">
+		<span class="model-label">Timbre ref</span>
+		<select
+			class="model-select"
+			bind:value={app.timbreRefId}
+			title="Select a timbre palette to use as reference for generation"
+		>
+			<option value={null}>None</option>
+			{#each app.songs.filter((s) => s.timbre_ref) as song (song.id)}
+				<option value={song.id}>{song.name}</option>
+			{/each}
+		</select>
+	</div>
+
+	<button
+		type="button"
+		onclick={resetTimbreRef}
+		disabled={app.timbreRefId == null}
+		title="Reset timbre reference: unmark the selected song and clear the selection"
+	>
+		<RotateCcw size={14} /> Timbre reset
+	</button>
 
 	<details open class="has-clear">
 		<summary>Flow matching parameters</summary>

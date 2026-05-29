@@ -56,7 +56,8 @@ export const app = $state({
 	refSongId: null as number | null,
 	srcSongId: null as number | null,
 	srcRangeStart: null as number | null,
-	srcRangeEnd: null as number | null
+	srcRangeEnd: null as number | null,
+	timbreRefId: null as number | null
 });
 
 let toastTimer = 0;
