@@ -7,6 +7,7 @@ export function displaySongName(song: Song): string {
 	const m = String(song.request.synth_model || '').match(/^acestep-v15-(.+?)-(Q\d.*|BF16)\.gguf$/);
 	const variant = m ? m[1] : '';
 	const task = song.request.task_type || '';
-	const suffix = [variant, task].filter((s) => s).join(' ');
+	const timbreRef = (song.request as any).timbre_ref_name || '';
+	const suffix = [variant, task, timbreRef].filter((s) => s).join(' ');
 	return suffix ? song.name + ' (' + suffix + ')' : song.name;
 }

@@ -454,9 +454,25 @@
 			const expanded: AceRequest[] = [];
 			for (const r of reqs) {
 				const base = hasSeed ? userSeed : Math.floor(Math.random() * 0x100000000);
-				toSend.push({ ...r, ...synthParams, seed: base, synth_batch_size: synthBatch });
+				const reqToSend = { ...r, ...synthParams, seed: base, synth_batch_size: synthBatch };
+				// ensure task_type is preserved for server
+				if (!reqToSend.task_type && r.task_type) {
+					reqToSend.task_type = r.task_type;
+				}
+				if (!reqToSend.task_type) {
+					reqToSend.task_type = app.request.task_type;
+				}
+				toSend.push(reqToSend);
 				for (let i = 0; i < synthBatch; i++) {
-					expanded.push({ ...r, ...synthParams, seed: base + i });
+					const req = { ...r, ...synthParams, seed: base + i };
+					// ensure task_type is preserved in expanded requests for display
+					if (!req.task_type && r.task_type) {
+						req.task_type = r.task_type;
+					}
+					if (!req.task_type) {
+						req.task_type = app.request.task_type;
+					}
+					expanded.push(req);
 				}
 			}
 
@@ -465,6 +481,13 @@
 			const srcSong = app.srcSongId != null ? app.songs.find((s) => s.id === app.srcSongId) : null;
 			const refSongId = app.timbreRefId != null ? app.timbreRefId : app.refSongId;
 			const refSong = refSongId != null ? app.songs.find((s) => s.id === refSongId) : null;
+
+			// add timbre ref name to expanded requests for display in song title
+			if (refSong?.name) {
+				for (const r of expanded) {
+					(r as any).timbre_ref_name = refSong.name;
+				}
+			}
 
 			// extract DiT variant from model filename
 			// "acestep-v15-xl-turbo-Q8_0.gguf" -> "xl-turbo"
