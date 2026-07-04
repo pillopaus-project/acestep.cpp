@@ -6,7 +6,6 @@
 #include "graph-arena.h"
 #include "qwen3-enc.h"  // Qwen3Layer, Qwen3Config, layer build helpers
 
-#include <algorithm>
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
@@ -464,7 +463,8 @@ static void qw3lm_forward(Qwen3LM * m, const int * token_ids, int n_tokens, int 
     // Attention window rounded up to 256 and clamped to the cache size:
     // fixed shapes over spans of 256 decode steps keep the CUDA graph
     // executable updatable in place.
-    const int n_kv_pad = std::min(c.max_seq_len, (int) GGML_PAD(kv_len, 256));
+    const int kv_pad_raw = (int) GGML_PAD(kv_len, 256);
+    const int n_kv_pad   = kv_pad_raw < c.max_seq_len ? kv_pad_raw : c.max_seq_len;
 
     // Persistent arena per shape class: prefill (n_tokens > 1) and
     // decode (n_tokens == 1) keep separate stable first node addresses.
@@ -609,7 +609,8 @@ static void qw3lm_forward_batch(Qwen3LM *   m,
     // Attention window rounded up to 256 and clamped to the cache size:
     // fixed shapes over spans of 256 decode steps keep the CUDA graph
     // executable updatable in place.
-    const int n_kv_pad = std::min(c.max_seq_len, (int) GGML_PAD(max_kv_len, 256));
+    const int kv_pad_raw = (int) GGML_PAD(max_kv_len, 256);
+    const int n_kv_pad   = kv_pad_raw < c.max_seq_len ? kv_pad_raw : c.max_seq_len;
 
     // Persistent arena: stable node addresses across decode steps.
     struct ggml_context * ctx = graph_arena_begin(&m->arena_batch);
