@@ -5,6 +5,7 @@ const STORAGE_KEY = 'ace';
 interface Saved {
 	name: string;
 	volume: number;
+	speed: number;
 	format: string;
 	dark: boolean;
 	logsOpen: boolean;
@@ -19,6 +20,7 @@ function load(): Saved {
 			return {
 				name: parsed.name || '',
 				volume: parsed.volume ?? 0.5,
+				speed: parsed.speed >= 94 && parsed.speed <= 106 ? Math.round(parsed.speed * 2) / 2 : 100,
 				format: ['mp3', 'wav16', 'wav24', 'wav32'].includes(parsed.format) ? parsed.format : 'mp3',
 				dark: parsed.dark ?? true,
 				logsOpen: parsed.logsOpen ?? true,
@@ -31,6 +33,7 @@ function load(): Saved {
 	return {
 		name: '',
 		volume: 0.5,
+		speed: 100,
 		format: 'mp3',
 		dark: false,
 		logsOpen: true,
@@ -43,6 +46,7 @@ const saved = load();
 export const app = $state({
 	name: saved.name,
 	volume: saved.volume,
+	speed: saved.speed,
 	format: saved.format,
 	dark: saved.dark,
 	logsOpen: saved.logsOpen,
@@ -100,6 +104,7 @@ $effect.root(() => {
 		const data: Saved = {
 			name: app.name,
 			volume: app.volume,
+			speed: app.speed,
 			format: app.format,
 			dark: app.dark,
 			logsOpen: app.logsOpen,

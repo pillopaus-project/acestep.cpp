@@ -489,6 +489,18 @@
 				}
 			}
 
+			// add source song name to expanded requests for display in song title.
+			// cover and cover-nofsq regenerate from the source audio, so the source
+			// name identifies the target. Other tasks keep their existing suffix.
+			if (srcSong?.name) {
+				for (const r of expanded) {
+					const task = r.task_type || '';
+					if (task === TASK_COVER || task === TASK_COVER_NOFSQ) {
+						(r as any).src_ref_name = srcSong.name;
+					}
+				}
+			}
+
 			// extract DiT variant from model filename
 			// "acestep-v15-xl-turbo-Q8_0.gguf" -> "xl-turbo"
 			const model = String(app.request.synth_model || '');

@@ -24,11 +24,19 @@ if(MSVC)
     add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
 endif()
 
-# Put executables and backend .so in the same directory (build root).
-# Without this, ggml defaults to bin/ for .so but executables stay in root,
-# and ggml_backend_load_all() can't find the backends at runtime.
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+# Put our binaries next to the ggml DLLs so tools run without PATH juggling.
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+
+# Portable RPATH: executables find .so files in their own directory.
+if(UNIX)
+    set(CMAKE_BUILD_RPATH_USE_ORIGIN ON)
+    set(CMAKE_INSTALL_RPATH "$ORIGIN")
+endif()
+
+
+
 
 # DiT tensor names can exceed default GGML_MAX_NAME of 64
 add_compile_definitions(GGML_MAX_NAME=128)

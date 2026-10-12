@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Volume2 } from '@lucide/svelte';
+	import { Volume2, AudioWaveform, RotateCcw } from '@lucide/svelte';
 	import { app } from './lib/state.svelte.js';
 	import { props } from './lib/api.js';
 	import { getAllSongs } from './lib/db.js';
@@ -32,6 +32,15 @@
 		app.volume = Number((e.target as HTMLInputElement).value);
 	}
 
+	// playback speed in percent: 100 = 1.0x, 94-106 in 0.5% steps
+	function onSpeed(e: Event) {
+		app.speed = Number((e.target as HTMLInputElement).value);
+	}
+
+	function resetSpeed() {
+		app.speed = 100;
+	}
+
 	// sync dark/light class on <html> so CSS variables switch
 	$effect(() => {
 		document.documentElement.classList.toggle('dark', app.dark);
@@ -50,6 +59,28 @@
 		<div class="volume">
 			<Volume2 size={14} />
 			<input type="range" min="0" max="1" step="0.01" value={app.volume} oninput={onVolume} />
+		</div>
+		<div class="volume">
+			<AudioWaveform size={14} />
+			<input
+				type="range"
+				class="speed-range"
+				min="94"
+				max="106"
+				step="0.5"
+				value={app.speed}
+				oninput={onSpeed}
+			/>
+			<span class="speed-label">{app.speed}%</span>
+			<button
+				type="button"
+				class="icon-btn"
+				onclick={resetSpeed}
+				disabled={app.speed === 100}
+				title="Reset playback speed to 100%"
+			>
+				<RotateCcw size={14} />
+			</button>
 		</div>
 	</header>
 
@@ -163,6 +194,31 @@
 	.volume input[type='range'] {
 		width: 80px;
 		cursor: pointer;
+	}
+	.volume input.speed-range {
+		width: 160px;
+	}
+	.speed-label {
+		font-size: 0.75rem;
+		font-family: monospace;
+		color: var(--fg);
+		min-width: 2.8rem;
+	}
+	.icon-btn {
+		background: none;
+		border: none;
+		cursor: pointer;
+		padding: 0.15rem;
+		color: var(--fg-dim);
+		display: flex;
+		align-items: center;
+	}
+	.icon-btn:hover:not(:disabled) {
+		color: var(--focus);
+	}
+	.icon-btn:disabled {
+		opacity: 0.4;
+		cursor: default;
 	}
 	main {
 		flex: 1;

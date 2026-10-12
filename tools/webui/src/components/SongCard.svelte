@@ -279,6 +279,13 @@
 		return String(m).padStart(2, '0') + ':' + String(sec).padStart(2, '0');
 	}
 
+	// effective time at the current playback speed: 100 = real time,
+	// 110 = 10% faster (shorter), 90 = 10% slower (longer).
+	// display only: playback, seek and the region loop stay in content time.
+	function effective(s: number): number {
+		return s * (100 / app.speed);
+	}
+
 	// Single action menu: one entry per user intent. Order mirrors a natural
 	// flow (tweak prompt -> rename -> grab audio -> work with latents -> inspect -> destroy).
 	// Destructive entries open a confirm dialog.
@@ -338,7 +345,7 @@
 		{#if song.latents}
 			<span class="format-badge">VAE</span>
 		{/if}
-		<span class="timecode">{fmtPos(time)} / {fmtDur(dur)}</span>
+		<span class="timecode">{fmtPos(effective(time))} / {fmtDur(effective(dur))}</span>
 		<div class="card-actions">
 			<label class="icon-btn"
 				><input
