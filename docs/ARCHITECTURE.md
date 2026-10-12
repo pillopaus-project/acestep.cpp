@@ -741,6 +741,10 @@ Required:
   --models <dir>         Directory of GGUF model files
   --request <json>       Input request JSON (carries lm_model)
 
+Optional:
+  --device <name>        Compute device: CUDA0, Vulkan0, MTL0, CPU...
+                         (default: best available)
+
 Debug:
   --max-seq <N>          KV cache size (default: 8192)
   --no-fsm               Disable FSM constrained decoding
@@ -769,6 +773,8 @@ Required:
   --request <json...>     One or more request JSONs (from ace-lm --request)
 
 Optional:
+  --device <name>         Compute device: CUDA0, Vulkan0, MTL0, CPU...
+                          (default: best available)
   --adapters <dir>        Directory of adapter files (enables JSON adapter field)
   --src-audio <path>      Source audio (WAV or MP3)
   --ref-audio <path>      Timbre reference audio (WAV or MP3)
@@ -866,6 +872,8 @@ Adapter:
   --adapters <dir>        Directory of adapters
 
 Memory control:
+  --device <name>         Compute device: CUDA0, Vulkan0, MTL0, CPU...
+                          (default: best available)
   --keep-loaded           Keep models in VRAM between requests
   --vae-chunk <N>         Latent frames per tile (default: 1024)
   --vae-overlap <N>       Overlap frames per side (default: 64)
@@ -1027,6 +1035,8 @@ Output naming: song.wav -> song.vae (f32) or song.nac8 (Q8) or song.nac4 (Q4)
                song.vae -> song.wav
 
 Memory control:
+  --device <name>         Compute device: CUDA0, Vulkan0, MTL0, CPU...
+                          (default: best available)
   --vae-chunk <N>         Latent frames per tile (default: 1024)
   --vae-overlap <N>       Overlap frames per side (default: 64)
 
@@ -1107,6 +1117,8 @@ Required:
   --src-audio <path>      Source audio (WAV or MP3, any sample rate)
 
 Optional:
+  --device <name>         Compute device: CUDA0, Vulkan0, MTL0, CPU...
+                          (default: best available)
   --request <json>        Request JSON carrying model selection and
                           sampling params (lm_model, synth_model,
                           lm_temperature, lm_top_p, lm_top_k)

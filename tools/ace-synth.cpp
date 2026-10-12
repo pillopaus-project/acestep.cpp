@@ -5,6 +5,7 @@
 // under --models <dir> and --adapters <dir>.
 
 #include "audio-io.h"
+#include "backend.h"
 #include "model-registry.h"
 #include "model-store.h"
 #include "pipeline-synth.h"
@@ -30,6 +31,8 @@ static void usage(const char * prog) {
             "  --models <dir>          Directory of GGUF model files\n"
             "  --request <json...>     One or more request JSONs (from ace-lm --request)\n\n"
             "Optional:\n"
+            "  --device <name>         Compute device: CUDA0, Vulkan0, MTL0, CPU...\n"
+            "                          (default: best available)\n"
             "  --adapters <dir>        Directory of adapter files (enables JSON adapter field)\n"
             "  --src-audio <path>      Source audio (WAV or MP3)\n"
             "  --ref-audio <path>      Timbre reference audio (WAV or MP3)\n\n"
@@ -61,6 +64,7 @@ int main(int argc, char ** argv) {
     const char *              src_audio_path = NULL;
     const char *              ref_audio_path = NULL;
     const char *              dump_dir       = NULL;
+    const char *              device         = NULL;
     bool                      use_fa         = true;
     bool                      use_batch_cfg  = true;
     bool                      clamp_fp16     = false;
@@ -75,6 +79,8 @@ int main(int argc, char ** argv) {
             }
         } else if (!strcmp(argv[i], "--models") && i + 1 < argc) {
             models_dir = argv[++i];
+        } else if (!strcmp(argv[i], "--device") && i + 1 < argc) {
+            device = argv[++i];
         } else if (!strcmp(argv[i], "--adapters") && i + 1 < argc) {
             adapters_dir = argv[++i];
         } else if (!strcmp(argv[i], "--src-audio") && i + 1 < argc) {
@@ -104,6 +110,10 @@ int main(int argc, char ** argv) {
         return 1;
     }
     if (request_paths.empty()) {
+        usage(argv[0]);
+        return 1;
+    }
+    if (device && !backend_set_device(device)) {
         usage(argv[0]);
         return 1;
     }

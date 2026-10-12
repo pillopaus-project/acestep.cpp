@@ -5,6 +5,7 @@
 // Output: request JSON with metadata + lyrics, reusable as ace-lm or ace-synth input.
 
 #include "audio-io.h"
+#include "backend.h"
 #include "model-registry.h"
 #include "model-store.h"
 #include "pipeline-understand.h"
@@ -29,6 +30,8 @@ static void usage(const char * prog) {
             "  --src-audio <path>      Source audio (WAV or MP3, any sample rate)\n"
             "\n"
             "Optional:\n"
+            "  --device <name>         Compute device: CUDA0, Vulkan0, MTL0, CPU...\n"
+            "                          (default: best available)\n"
             "  --request <json>        Request JSON carrying model selection and\n"
             "                          sampling params (lm_model, synth_model,\n"
             "                          lm_temperature, lm_top_p, lm_top_k)\n"
@@ -57,6 +60,7 @@ int main(int argc, char ** argv) {
     const char * request_path   = NULL;
     const char * output_path    = NULL;
     const char * dump_dir       = NULL;
+    const char * device         = NULL;
 
     AceUnderstandParams params;
     ace_understand_default_params(&params);
@@ -71,6 +75,8 @@ int main(int argc, char ** argv) {
             models_dir = argv[++i];
         } else if (!strcmp(argv[i], "--src-audio") && i + 1 < argc) {
             src_audio_path = argv[++i];
+        } else if (!strcmp(argv[i], "--device") && i + 1 < argc) {
+            device = argv[++i];
         } else if (!strcmp(argv[i], "--request") && i + 1 < argc) {
             request_path = argv[++i];
         } else if (!strcmp(argv[i], "-o") && i + 1 < argc) {
@@ -98,6 +104,10 @@ int main(int argc, char ** argv) {
         return 1;
     }
     if (!src_audio_path) {
+        usage(argv[0]);
+        return 1;
+    }
+    if (device && !backend_set_device(device)) {
         usage(argv[0]);
         return 1;
     }

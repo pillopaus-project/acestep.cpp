@@ -29,6 +29,7 @@
 //   /understand LM + DiT + VAE
 
 #include "audio-io.h"
+#include "backend.h"
 #include "model-registry.h"
 #include "model-store.h"
 #include "pipeline-lm.h"
@@ -1607,6 +1608,8 @@ static void usage(const char * prog) {
             "  --adapters <dir>        Directory of adapters\n"
             "\n"
             "Memory control:\n"
+            "  --device <name>         Compute device: CUDA0, Vulkan0, MTL0, CPU...\n"
+            "                          (default: best available)\n"
             "  --keep-loaded           Keep models in VRAM between requests\n"
             "  --vae-chunk <N>         Latent frames per tile (default: %d)\n"
             "  --vae-overlap <N>       Overlap frames per side (default: %d)\n"
@@ -1633,6 +1636,7 @@ int main(int argc, char ** argv) {
     int          port         = 8080;
     const char * models_dir   = nullptr;
     const char * adapters_dir = nullptr;
+    const char * device       = nullptr;
 
     if (argc < 2) {
         usage(argv[0]);
@@ -1646,6 +1650,10 @@ int main(int argc, char ** argv) {
             adapters_dir = argv[++i];
         } else if (!strcmp(argv[i], "--max-seq") && i + 1 < argc) {
             g_lm_params.max_seq = atoi(argv[++i]);
+
+            // device
+        } else if (!strcmp(argv[i], "--device") && i + 1 < argc) {
+            device = argv[++i];
 
             // vae tiling
         } else if (!strcmp(argv[i], "--vae-chunk") && i + 1 < argc) {
@@ -1684,6 +1692,10 @@ int main(int argc, char ** argv) {
 
     // --models is required
     if (!models_dir) {
+        usage(argv[0]);
+        return 1;
+    }
+    if (device && !backend_set_device(device)) {
         usage(argv[0]);
         return 1;
     }

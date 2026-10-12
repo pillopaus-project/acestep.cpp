@@ -93,12 +93,11 @@ Adapter:
   --adapters <dir>        Directory of adapters
 
 Memory control:
+  --device <name>         Compute device: CUDA0, Vulkan0, MTL0, CPU...
+                          (default: best available)
   --keep-loaded           Keep models in VRAM between requests
   --vae-chunk <N>         Latent frames per tile (default: 1024)
   --vae-overlap <N>       Overlap frames per side (default: 64)
-
-Output:
-  --mp3-bitrate <kbps>    MP3 bitrate (default: 128)
 
 Server:
   --host <addr>           Listen address (default: 127.0.0.1)

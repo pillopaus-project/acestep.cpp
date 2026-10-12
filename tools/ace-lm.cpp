@@ -3,6 +3,7 @@
 // writes output files. The model to use comes from request.lm_model, the
 // registry resolves it to a GGUF path under --models <dir>.
 
+#include "backend.h"
 #include "model-registry.h"
 #include "model-store.h"
 #include "pipeline-lm.h"
@@ -28,6 +29,10 @@ static void usage(const char * prog) {
             "  --models <dir>         Directory of GGUF model files\n"
             "  --request <json>       Input request JSON (carries lm_model)\n"
             "\n"
+            "Optional:\n"
+            "  --device <name>        Compute device: CUDA0, Vulkan0, MTL0, CPU...\n"
+            "                         (default: best available)\n"
+            "\n"
             "Debug:\n"
             "  --max-seq <N>          KV cache size (default: %d)\n"
             "  --no-fsm               Disable FSM constrained decoding\n"
@@ -47,6 +52,7 @@ int main(int argc, char ** argv) {
     const char * request_path = NULL;
     const char * dump_logits  = NULL;
     const char * dump_tokens  = NULL;
+    const char * device       = NULL;
 
     if (argc < 2) {
         usage(argv[0]);
@@ -58,6 +64,8 @@ int main(int argc, char ** argv) {
             models_dir = argv[++i];
         } else if (!strcmp(argv[i], "--request") && i + 1 < argc) {
             request_path = argv[++i];
+        } else if (!strcmp(argv[i], "--device") && i + 1 < argc) {
+            device = argv[++i];
         } else if (!strcmp(argv[i], "--max-seq") && i + 1 < argc) {
             params.max_seq = atoi(argv[++i]);
         } else if (!strcmp(argv[i], "--no-fsm")) {
@@ -83,6 +91,10 @@ int main(int argc, char ** argv) {
         return 1;
     }
     if (!request_path) {
+        usage(argv[0]);
+        return 1;
+    }
+    if (device && !backend_set_device(device)) {
         usage(argv[0]);
         return 1;
     }
