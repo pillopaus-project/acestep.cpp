@@ -77,7 +77,7 @@
 	let hasCodes = $derived(!!app.request.audio_codes?.trim() && app.srcSongId == null);
 	let hasSrc = $derived(app.srcSongId != null);
 	let hasRange = $derived(app.srcRangeStart != null || app.srcRangeEnd != null);
-	let hasRef = $derived(app.refSongId != null);
+	let hasRef = $derived(app.refSongId != null || app.timbreRefId != null);
 
 	// instrumental mode: checked when lyrics and language match the convention.
 	// any manual edit to either field naturally unchecks via $derived.
@@ -454,15 +454,52 @@
 			const expanded: AceRequest[] = [];
 			for (const r of reqs) {
 				const base = hasSeed ? userSeed : Math.floor(Math.random() * 0x100000000);
-				toSend.push({ ...r, ...synthParams, seed: base, synth_batch_size: synthBatch });
+				const reqToSend = { ...r, ...synthParams, seed: base, synth_batch_size: synthBatch };
+				// ensure task_type is preserved for server
+				if (!reqToSend.task_type && r.task_type) {
+					reqToSend.task_type = r.task_type;
+				}
+				if (!reqToSend.task_type) {
+					reqToSend.task_type = app.request.task_type;
+				}
+				toSend.push(reqToSend);
 				for (let i = 0; i < synthBatch; i++) {
-					expanded.push({ ...r, ...synthParams, seed: base + i });
+					const req = { ...r, ...synthParams, seed: base + i };
+					// ensure task_type is preserved in expanded requests for display
+					if (!req.task_type && r.task_type) {
+						req.task_type = r.task_type;
+					}
+					if (!req.task_type) {
+						req.task_type = app.request.task_type;
+					}
+					expanded.push(req);
 				}
 			}
 
 			// find source audio (cover/lego/repaint) and reference audio (timbre)
+			// prioritize timbreRefId from dropdown if set, otherwise use refSongId from checkbox
 			const srcSong = app.srcSongId != null ? app.songs.find((s) => s.id === app.srcSongId) : null;
-			const refSong = app.refSongId != null ? app.songs.find((s) => s.id === app.refSongId) : null;
+			const refSongId = app.timbreRefId != null ? app.timbreRefId : app.refSongId;
+			const refSong = refSongId != null ? app.songs.find((s) => s.id === refSongId) : null;
+
+			// add timbre ref name to expanded requests for display in song title
+			if (refSong?.name) {
+				for (const r of expanded) {
+					(r as any).timbre_ref_name = refSong.name;
+				}
+			}
+
+			// add source song name to expanded requests for display in song title.
+			// cover and cover-nofsq regenerate from the source audio, so the source
+			// name identifies the target. Other tasks keep their existing suffix.
+			if (srcSong?.name) {
+				for (const r of expanded) {
+					const task = r.task_type || '';
+					if (task === TASK_COVER || task === TASK_COVER_NOFSQ) {
+						(r as any).src_ref_name = srcSong.name;
+					}
+				}
+			}
 
 			// extract DiT variant from model filename
 			// "acestep-v15-xl-turbo-Q8_0.gguf" -> "xl-turbo"
@@ -550,6 +587,17 @@
 
 	function ph(v: unknown): string {
 		return v != null ? String(v) : '';
+	}
+
+	// Reset the timbre ref by unmarking the selected song
+	async function resetTimbreRef() {
+		if (app.timbreRefId == null) return;
+		const song = app.songs.find((s) => s.id === app.timbreRefId);
+		if (song) {
+			song.timbre_ref = false;
+			await putSong($state.snapshot(song));
+			app.timbreRefId = null;
+		}
 	}
 </script>
 
@@ -897,6 +945,29 @@
 			</div>
 		</div>
 	</details>
+
+	<div class="model-row">
+		<span class="model-label">Timbre ref</span>
+		<select
+			class="model-select"
+			bind:value={app.timbreRefId}
+			title="Select a timbre palette to use as reference for generation"
+		>
+			<option value={null}>None</option>
+			{#each app.songs.filter((s) => s.timbre_ref) as song (song.id)}
+				<option value={song.id}>{song.name}</option>
+			{/each}
+		</select>
+	</div>
+
+	<button
+		type="button"
+		onclick={resetTimbreRef}
+		disabled={app.timbreRefId == null}
+		title="Reset timbre reference: unmark the selected song and clear the selection"
+	>
+		<RotateCcw size={14} /> Timbre reset
+	</button>
 
 	<details open class="has-clear">
 		<summary>Flow matching parameters</summary>

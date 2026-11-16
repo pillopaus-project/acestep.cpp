@@ -115,6 +115,12 @@
 		if (peaks.length > 0) draw();
 	});
 
+	// live speed change: apply to an already playing source
+	$effect(() => {
+		app.speed;
+		if (source) source.playbackRate.value = app.speed / 100;
+	});
+
 	// play/pause
 	$effect(() => {
 		const wantPlay = playing;
@@ -165,6 +171,7 @@
 		if (!actx || !decoded || !gain) return;
 		const s = actx.createBufferSource();
 		s.buffer = decoded;
+		s.playbackRate.value = untrack(() => app.speed) / 100;
 		s.connect(gain);
 		s.onended = () => {
 			if (source === s) {

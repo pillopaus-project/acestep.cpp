@@ -2,10 +2,13 @@
 	import { app } from '../lib/state.svelte.js';
 	import SongCard from './SongCard.svelte';
 	import LogCard from './LogCard.svelte';
+
+	// Filter out songs marked as timbre palettes
+	let visibleSongs = $derived(app.songs.filter((s) => !s.timbre_ref));
 </script>
 
 <div class="song-list">
-	{#each app.songs as song (song.id)}
+	{#each visibleSongs as song (song.id)}
 		<SongCard {song} />
 	{/each}
 	<LogCard />
